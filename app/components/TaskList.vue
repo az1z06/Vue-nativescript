@@ -34,155 +34,184 @@
       </GridLayout>
     </Page>
 </template>
-  
-
 <script>
-  import { ApplicationSettings } from "@nativescript/core";
-  import Login from './Login.vue';
-  import axios from 'axios';
+import { ApplicationSettings } from "@nativescript/core";
+import Login from './Login.vue';
+import axios from 'axios';
 
-  export default {
-    data() {
-      return {
-        tasks: [],
-        newTask: '',
-        description: "",
-        error: null,
-        token: ""
-      };
-    },
-    async mounted() {
+export default {
+  // Déclaration des données du composant
+  data() {
+    return {
+      tasks: [],          // Liste des tâches récupérées depuis le serveur
+      newTask: '',        // Texte de la nouvelle tâche à ajouter
+      description: "",    // Description de la nouvelle tâche
+      error: null,        // Message d'erreur (affiché en cas de problème)
+      token: ""           // Token d'authentification récupéré depuis ApplicationSettings
+    };
+  },
+  // Cycle de vie : à l'affichage du composant
+  async mounted() {
+    try {
+      // Récupère le token utilisateur stocké dans ApplicationSettings
+      this.token = ApplicationSettings.getString("userToken");
+      // Si aucun token n'est trouvé, redirige vers la page Login
+      if (!this.token) this.$navigateTo(Login);
+      // Récupère la liste des tâches depuis le serveur
+      this.getTasks();
+    } catch (error) {
+      // En cas d'erreur, affiche un message d'erreur
+      this.error = 'Failed to load tasks';
+    }
+  },
+  // Définition des méthodes du composant
+  methods: {
+    // Méthode pour ajouter une nouvelle tâche
+    async addTask() {
       try {
-        this.token = ApplicationSettings.getString("userToken");
-        if (!this.token) this.$navigateTo(Login);
-        this.getTasks();
-      } catch (error) {
-        this.error = 'Failed to load tasks';
-      }
-    },
-    methods: {
-      async addTask() {
-        try {
-          let config = {
-            method: 'post',
-            url: 'http://10.0.2.2:3001/api/tasks',
-            headers: {
-              'Authorization': this.token
-            },
-            data: {
-              title: this.newTask,
-              description: this.description
-            }
-          };
-          const response = await axios.request(config);
-          this.getTasks();
-          this.newTask = '';
-          this.description = '';
-        } catch (error) {
-          this.error = 'Failed to add task';
-        }
-      },
-      async getTasks() {
+        // Configuration de la requête POST pour ajouter une tâche
         let config = {
-          method: 'get',
+          method: 'post',
           url: 'http://10.0.2.2:3001/api/tasks',
           headers: {
             'Authorization': this.token
           },
-          data: []
+          data: {
+            title: this.newTask,
+            description: this.description
+          }
         };
-        try {
-          const response = await axios.request(config);
-          this.tasks = response.data;
-        } catch (error) {
-          this.error = 'Failed to load tasks';
-        }
-      },
-      async deleteTask(id) {
-        try {
-          console.log("Supprimer la tâche avec id:", id); // pour débug
-          let config = {
-            method: 'delete',
-            url: `http://10.0.2.2:3001/api/tasks/${id}`,
-            headers: {
-              'Authorization': this.token
-            }
-          };
-          await axios.request(config);
-          this.tasks = this.tasks.filter((task) => task.id !== id);
-        } catch (error) {
-          this.error = 'Failed to delete task';
-        }
-      },
-      async modifyTask(id) {
-        try {
-          // Premier prompt pour le titre
-          const promptTitle = await prompt({
-            title: "Modifier la tâche",
-            message: "Entrez le nouveau titre :",
-            okButtonText: "OK",
-            cancelButtonText: "Annuler",
-            defaultText: ""  // valeur par défaut
-          });
-
-          if (!promptTitle.result) {
-            // L’utilisateur a cliqué sur "Annuler"
-            console.log("Modification annulée pour le titre.");
-            return;
-          }
-          const newTitle = promptTitle.text;
-
-          // Deuxième prompt pour la description
-          const promptDesc = await prompt({
-            title: "Modifier la tâche",
-            message: "Entrez la nouvelle description :",
-            okButtonText: "OK",
-            cancelButtonText: "Annuler",
-            defaultText: ""
-          });
-          if (!promptDesc.result) {
-            console.log("Modification annulée pour la description.");
-            return;
-          }
-          const newDescription = promptDesc.text;
-
-          // Vérif si c’est vide
-          if (!newTitle || !newDescription) {
-            console.log("Champs vides.");
-            return;
-          }
-
-          // Construire la requête PUT
-          const config = {
-            method: "put",
-            url: `http://10.0.2.2:3001/api/tasks/${id}`,
-            headers: {
-              Authorization: this.token
-            },
-            data: {
-              title: newTitle,
-              description: newDescription,
-              completed: false
-            }
-          };
-
-          // Appeler l’API
-          const response = await axios.request(config);
-          console.log("Réponse du serveur:", response.data);
-          this.getTasks();
-
-        } catch (error) {
-          this.error = "Échec de la mise à jour de la tâche";
-          console.error(error);
-        }
-      },
-      logout() {
-        ApplicationSettings.remove("userToken");
-        this.$navigateTo(Login);
+        // Exécution de la requête
+        const response = await axios.request(config);
+        // Après ajout, rafraîchit la liste des tâches
+        this.getTasks();
+        // Réinitialise les champs de saisie
+        this.newTask = '';
+        this.description = '';
+      } catch (error) {
+        // En cas d'erreur lors de l'ajout, affiche un message d'erreur
+        this.error = 'Failed to add task';
       }
+    },
+    // Méthode pour récupérer la liste des tâches depuis le serveur
+    async getTasks() {
+      let config = {
+        method: 'get',
+        url: 'http://10.0.2.2:3001/api/tasks',
+        headers: {
+          'Authorization': this.token
+        },
+        data: []
+      };
+      try {
+        // Exécution de la requête GET
+        const response = await axios.request(config);
+        // Stocke les tâches récupérées dans la variable tasks
+        this.tasks = response.data;
+      } catch (error) {
+        // En cas d'erreur lors de la récupération, affiche un message d'erreur
+        this.error = 'Failed to load tasks';
+      }
+    },
+    // Méthode pour supprimer une tâche
+    async deleteTask(id) {
+      try {
+        // Affiche l'id de la tâche à supprimer pour le débogage
+        console.log("Supprimer la tâche avec id:", id);
+        let config = {
+          method: 'delete',
+          url: `http://10.0.2.2:3001/api/tasks/${id}`,
+          headers: {
+            'Authorization': this.token
+          }
+        };
+        // Exécute la requête DELETE
+        await axios.request(config);
+        // Met à jour la liste des tâches en filtrant la tâche supprimée
+        this.tasks = this.tasks.filter((task) => task.id !== id);
+      } catch (error) {
+        // En cas d'erreur lors de la suppression, affiche un message d'erreur
+        this.error = 'Failed to delete task';
+      }
+    },
+    // Méthode pour modifier une tâche existante
+    async modifyTask(id) {
+      try {
+        // Premier prompt pour récupérer le nouveau titre
+        const promptTitle = await prompt({
+          title: "Modify Task",
+          message: "Enter the new title:",
+          okButtonText: "OK",
+          cancelButtonText: "Cancel",
+          defaultText: ""  // Default value
+        });
+      
+        // Si l'utilisateur annule, arrête la modification
+        if (!promptTitle.result) {
+          console.log("Modification annulée pour le titre.");
+          return;
+        }
+        const newTitle = promptTitle.text;
+
+        // Deuxième prompt pour récupérer la nouvelle description
+        const promptDesc = await prompt({
+          title: "Modify Task",
+          message: "Enter the new description:",
+          okButtonText: "OK",
+          cancelButtonText: "Cancel",
+          defaultText: ""
+        });
+       
+        // Si l'utilisateur annule, arrête la modification
+        if (!promptDesc.result) {
+          console.log("Modification annulée pour la description.");
+          return;
+        }
+        const newDescription = promptDesc.text;
+
+        // Vérifie que les champs ne sont pas vides
+        if (!newTitle || !newDescription) {
+          console.log("Champs vides.");
+          return;
+        }
+
+        // Configuration de la requête PUT pour modifier la tâche
+        const config = {
+          method: "put",
+          url: `http://10.0.2.2:3001/api/tasks/${id}`,
+          headers: {
+            Authorization: this.token
+          },
+          data: {
+            title: newTitle,
+            description: newDescription,
+            completed: false
+          }
+        };
+
+        // Exécute la requête PUT
+        const response = await axios.request(config);
+        console.log("Réponse du serveur:", response.data);
+        // Rafraîchit la liste des tâches après modification
+        this.getTasks();
+
+      } catch (error) {
+        // En cas d'erreur lors de la modification, affiche un message d'erreur
+        this.error = "Échec de la mise à jour de la tâche";
+        console.error(error);
+      }
+    },
+    logout() {
+      // Supprime le token stocké et redirige vers la page Login
+      ApplicationSettings.remove("userToken");
+      this.$navigateTo(Login);
     }
-  };
+  }
+};
 </script>
+
+
+
 
 <style scoped>
 .page {

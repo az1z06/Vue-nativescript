@@ -18,42 +18,54 @@ import Register from './Register.vue';
 import TaskList from './TaskList.vue';
 
 export default {
+  // Définition des données du composant
   data() {
     return {
-      username: '',
-      password: '',
-      error: null,
-      userToken: null
+      username: '',       // Nom d'utilisateur saisi par l'utilisateur
+      password: '',       // Mot de passe saisi par l'utilisateur
+      error: null,        // Message d'erreur, s'il y en a
+      userToken: null     // Jeton de connexion stocké
     };
   },
+  // Définition des méthodes du composant
   methods: {
+    // Redirige vers la page d'inscription
     async register() {
       this.$navigateTo(Register);
     },
+    // Tentative de connexion de l'utilisateur
     async login() {
       try {
+        // Envoie une requête POST pour connecter l'utilisateur
         const response = await axios.post('http://10.0.2.2:3001/api/users/login', {
           username: this.username,
           password: this.password,
         });
+        // Si la connexion réussit et que des données sont retournées
         if (response.data) {
           console.log(response.data);
+          // Stocke le token utilisateur
           ApplicationSettings.setString("userToken", response.data.token);
+          // Redirige vers la page de la liste des tâches
           this.$navigateTo(TaskList);
         } else {
           console.log(response);
         }
       } catch (error) {
         console.log(error);
+        // Affiche un message d'erreur si la connexion échoue
         this.error = 'Invalid login credentials';
       }
     },
   },
+  // Lors du montage du composant, vérifie si un token est déjà stocké
   mounted() {
     this.userToken = ApplicationSettings.getString("userToken");
+    // Si un token existe, redirige directement vers la page des tâches
     if (this.userToken) this.$navigateTo(TaskList);
   }
 };
+
 </script>
 
 <style scoped>

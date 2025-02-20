@@ -22,53 +22,66 @@
   import TaskList from './TaskList.vue';
 
   export default {
+    // Données du composant
     data() {
       return {
-        username: '',
-        password: '',
-        error: null,
-        userToken: null
+        username: '',    // Nom d'utilisateur saisi
+        password: '',    // Mot de passe saisi
+        error: null,     // Message d'erreur (s'il y en a)
+        userToken: null  // Token d'authentification stocké
       };
     },
+    // Méthodes du composant
     methods: {
+      // Méthode pour inscrire un nouvel utilisateur
       async register() {
         try {
-          // Faire la requête POST vers l'API "register"
+          // Envoi d'une requête POST à l'API pour l'inscription
           const response = await axios.post('http://10.0.2.2:3001/api/users/register', {
             username: this.username,
             password: this.password
           });
-          console.log(response.data); // { message: 'Utilisateur créé avec succès' }
+          console.log(response.data); // Affiche la réponse (ex: { message: 'Utilisateur créé avec succès' })
+          // Redirection vers la page de login après l'inscription
           this.$navigateTo(Login);
         } catch (error) {
+          // En cas d'erreur lors de l'inscription, affiche un message d'erreur
           this.error = "Failed to register user";
           console.error(error);
         }
       },
+      // Méthode pour naviguer vers la page de login
       goToLogin() {
         this.$navigateTo(Login);
       },
+      // Méthode pour connecter un utilisateur
       async login() {
         try {
+          // Envoi d'une requête POST à l'API pour la connexion
           const response = await axios.post('http://10.0.2.2:3001/api/users/login', {
             username: this.username,
             password: this.password
           });
           if (response.data) {
+            // Stocke le token reçu en réponse
             ApplicationSettings.setString("userToken", response.data.token);
+            // Redirige vers la page des tâches
             this.$navigateTo(TaskList);
           }
         } catch (error) {
+          // En cas d'erreur lors de la connexion, affiche un message d'erreur
           this.error = 'Invalid login credentials';
         }
       }
     },
+    // Lors du montage du composant, vérifie si l'utilisateur est déjà connecté
     mounted() {
       this.userToken = ApplicationSettings.getString("userToken");
       if (this.userToken) this.$navigateTo(TaskList);
     }
   };
 </script>
+
   
 <style scoped>
 .page {
