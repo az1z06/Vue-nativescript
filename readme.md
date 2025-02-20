@@ -69,4 +69,4 @@ Cette application de gestion de tâches (ToDo List) est développée avec Native
 
 ## Auteurs
 
-- Aziz Jouni (https://github.com/az1z06)
+- Aziz Jouini (https://github.com/az1z06)
