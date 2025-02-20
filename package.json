@@ -6,9 +6,21 @@
   "dependencies": {
     "@nativescript/core": "~8.8.0",
     "@nativescript/theme": "^3.1.0",
-    "nativescript-vue": "~2.9.3"
+    "assert": "^2.1.0",
+    "axios": "^0.18.0",
+    "browserify-zlib": "^0.2.0",
+    "buffer": "^6.0.3",
+    "https-browserify": "^1.0.0",
+    "nativescript-vue": "~2.9.3",
+    "os-browserify": "^0.3.0",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "tty-browserify": "^0.0.1",
+    "url": "^0.11.4",
+    "util": "^0.12.5"
   },
   "devDependencies": {
+    "@nativescript/android": "8.8.6",
     "@nativescript/webpack": "~5.0.0",
     "nativescript-vue-template-compiler": "~2.9.3"
   }
